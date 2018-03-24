@@ -34,27 +34,38 @@ Function GetHirstPalette(topV,leftV,bottomV,rightV,ww,hh,m0)
 			l += 1
 		endfor
 	endfor
-	TestHirstPalette(topV,leftV,bottomV,rightV,ww,hh)
+	MakeHirstReplica(ww,hh)
 End
 
-Function TestHirstPalette(topV,leftV,bottomV,rightV,ww,hh)
-	Variable topV,leftV,bottomV,rightV,ww,hh
-	WAVE/Z H_RawPalette,H_SpotLocs
+// This function will make a replica where the distances between spots are hard coded
+Function MakeHirstReplica(ww,hh)
+	Variable ww,hh
+	
+	// set up palette
+	WAVE/Z H_RawPalette
 	Duplicate/O H_RawPalette,H_RawPalette16
 	H_RawPalette16 *=257
+	// Make a 2-column wave for spot locations
+	Make/O/N=(ww*hh,2) H_SpotLocs
+	// Spot inset is 22,22
+	// Spot spacing is 83
+	H_SpotLocs[][0] = 22 + (floor(p / hh) * 83)
+	H_spotLocs[][1] = 22 + (mod(p,hh) * 83)
+	Variable graphWidth = floor((2 * 22) + ((ww-1) * 83) * 0.52)
+	Variable graphHeight = floor((2 * 22) + ((hh-1) * 83) * 0.52)
 	KillWindow/Z spotTest
-	Display/N=spotTest/W=(186,45,854,672) H_SpotLocs[][1] vs H_SpotLocs[][0]
+	Display/N=spotTest/W=(50,50,50+graphWidth,50+graphHeight) H_SpotLocs[][1] vs H_SpotLocs[][0]
 	ModifyGraph/W=spotTest mode=3,marker=19,msize=11,mrkThick=0,zColor(H_SpotLocs)={H_RawPalette16,*,*,directRGB,0}
 	ModifyGraph/W=spotTest margin=6
 	ModifyGraph/W=spotTest noLabel=2,axThick=0,standoff=0
 	ModifyGraph/W=spotTest width={Plan,1,bottom,left}
-	SetAxis/W=spotTest left bottomV+topV,0
-	SetAxis/W=spotTest bottom 0,rightV+leftV
+	Variable axWidth = (2 * 22) + ((ww-1) * 83)
+	Variable axHeight = (2 * 22) + ((hh-1) * 83)
+	SetAxis/W=spotTest left axHeight,0
+	SetAxis/W=spotTest bottom 0,axWidth
 	SetDrawLayer/W=spotTest UserBack
 	SetDrawEnv/W=spotTest xcoord= bottom,ycoord= left
 	SetDrawEnv/W=spotTest fillfgc= (63222,63222,63222),linethick= 0.00
-	DrawRect/W=spotTest 0,0,rightV+leftV,bottomV+topV
+	DrawRect/W=spotTest 0,0,axWidth,axHeight
 	SetDrawLayer/W=spotTest UserFront
 End
-
-	

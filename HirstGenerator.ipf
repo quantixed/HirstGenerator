@@ -1,11 +1,54 @@
 #pragma TextEncoding = "MacRoman"
 #pragma rtGlobals=3		// Use modern global access method and strict wave access.
+
+/// @param	ww	variable to determine how many spots there will be across
+/// @param	hh	varuable to determine how many spots there will be down
+Function HirstGenerator(ww,hh)
+	Variable ww,hh
+	
+	// set up palette
+	WAVE/Z H_RawPalette16
+	if(!WaveExists(H_RawPalette16))
+		Print "Please load H_RawPalette16"
+	endif
+	StatsResample/N=(ww*hh)/MC/Q H_RawPalette16
+	WAVE/Z M_Resampled
+	Duplicate/O M_Resampled, H_RandomPalette16 
+	// Make a 2-column wave for spot locations
+	Make/O/N=(ww*hh,2) H_SpotLocs
+	// Spot inset is 22,22
+	// Spot spacing is 83
+	H_SpotLocs[][0] = 22 + (floor(p / hh) * 83)
+	H_spotLocs[][1] = 22 + (mod(p,hh) * 83)
+	Variable graphWidth = floor((2 * 22) + ((ww-1) * 83) * 0.52)
+	Variable graphHeight = floor((2 * 22) + ((hh-1) * 83) * 0.52)
+	KillWindow/Z spotTest
+	Display/N=spotTest/W=(50,50,50+graphWidth,50+graphHeight) H_SpotLocs[][1] vs H_SpotLocs[][0]
+	ModifyGraph/W=spotTest mode=3,marker=19,msize=11,mrkThick=0,zColor(H_SpotLocs)={H_RandomPalette16,*,*,directRGB,0}
+	ModifyGraph/W=spotTest margin=1
+	ModifyGraph/W=spotTest noLabel=2,axThick=0,standoff=0
+	ModifyGraph/W=spotTest width={Plan,1,bottom,left}
+	Variable axWidth = (2 * 22) + ((ww-1) * 83)
+	Variable axHeight = (2 * 22) + ((hh-1) * 83)
+	SetAxis/W=spotTest left axHeight,0
+	SetAxis/W=spotTest bottom 0,axWidth
+	SetDrawLayer/W=spotTest UserBack
+	SetDrawEnv/W=spotTest xcoord= bottom,ycoord= left
+	SetDrawEnv/W=spotTest fillfgc= (63222,63222,63222),linethick= 0.00
+	DrawRect/W=spotTest 0,0,axWidth,axHeight
+	SetDrawLayer/W=spotTest UserFront
+	SavePICT/E=-5/RES=300 as "spotTest.png"
+End
+
+// --------------------------------------------------------------------------------------------
+
 // Load this picture from:
 // http://www.damienhirst.com/cache/images/dhs3823_0_1280_0.jpg
-// ‘Abalone Acetone Powder’ (1991). Photographed by Alex Hartley © Damien Hirst and Science Ltd. All rights reserved, DACS 2012
+// ‘Abalone Acetone Powder’ (1991). Photographed by Alex Hartley © Damien Hirst and Science Ltd
 // From local disk, using ImageLoad/P=Hirst/T=jpeg/Q/N=hirst/G "dhs3823_0_1280_0.jpg"
 // Place marquee on top left spot to get topV and leftV; and then bottom right
 // count spots across (ww) and spots down (hh)
+// i.e. GetHirstPalette(22,22,1178,1260,16,15,hirst)
 Function GetHirstPalette(topV,leftV,bottomV,rightV,ww,hh,m0)
 	Variable topV,leftV,bottomV,rightV,ww,hh
 	Wave m0
